@@ -1,7 +1,13 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Wrapper from "../../assets/wrappers/DashboardFormPage";
-import FormRow from "../../components/FormRow";
+import { FormRowSelect, FormRow } from "../../components";
+import {
+  clearValues,
+  createJob,
+  handleChange,
+} from "../../features/jobs/jobSlice";
+import { useEffect } from "react";
 
 const AddJob = () => {
   const {
@@ -17,19 +23,30 @@ const AddJob = () => {
     editJobId,
   } = useSelector((store) => store.job);
 
+  const { user } = useSelector((store) => store.user);
+
+  const dispatch = useDispatch();
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!position || !company || !jobLocation) {
       toast.error("please fill all fields");
       return;
     }
+    dispatch(createJob({ position, company, jobLocation, jobType, status }));
   };
 
   const handleJobInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    console.log(`${name}:${value}`);
+    dispatch(handleChange({ name, value }));
   };
+
+  useEffect(() => {
+    if (!isEditing) {
+      dispatch(handleChange({ name: "jobLocation", value: user.location }));
+    }
+  }, []);
 
   return (
     <Wrapper>
@@ -39,7 +56,7 @@ const AddJob = () => {
           {/* position */}
           <FormRow
             type={"text"}
-            name="positon"
+            name="position"
             handleChange={handleJobInput}
             value={position}
           />
@@ -58,21 +75,36 @@ const AddJob = () => {
             handleChange={handleJobInput}
             value={jobLocation}
           />
+          {/* status */}
+          <FormRowSelect
+            name={"status"}
+            value={status}
+            handleChange={handleJobInput}
+            list={statusOptions}
+          />
+          {/* jop type */}
+          <FormRowSelect
+            name={"jobType"}
+            labelText={"job type"}
+            value={jobType}
+            handleChange={handleJobInput}
+            list={jobTypeOptions}
+          />
           <div className="btn-container">
             <button
               type="button"
               className="btn clear-btn btn-block"
-              onClick={() => console.log("clear")}
+              onClick={() => dispatch(clearValues())}
             >
               clear
             </button>
             <button
               type="button"
               className="btn submit-btn btn-block"
-              onClick={() => console.log("submit")}
+              onClick={handleSubmit}
               disabled={isLoading}
             >
-              clear
+              submit
             </button>
           </div>
         </div>
